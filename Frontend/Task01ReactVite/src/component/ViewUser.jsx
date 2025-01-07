@@ -7,7 +7,7 @@ const ViewUsers = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch("http://localhost:5100/Users");
+        const response = await fetch("https://mobzway-task01-3.onrender.com/Users");
         if (!response.ok) {
           throw new Error("Failed to fetch users");
         }
