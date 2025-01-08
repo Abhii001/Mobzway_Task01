@@ -24,6 +24,15 @@ const UserForm = () => {
     }));
   };
 
+  const handleTextOnlyInput = (e) => {
+    const { value, name } = e.target;
+    if (/[0-9]/.test(value)) {
+      alert(`${name} field accepts text only. Please avoid entering numbers.`);
+      e.target.value = value.replace(/[0-9]/g, "");
+    }
+    handleChange(e);
+  };
+
   const handleSubmit = async () => {
     const userData = {
       ...formData,
@@ -86,14 +95,14 @@ const UserForm = () => {
           className="space-y-4"
         >
           {[
-            { name: "firstName", placeholder: "First Name", type: "text" },
-            { name: "lastName", placeholder: "Last Name", type: "text" },
-            { name: "mobile", placeholder: "Mobile No", type: "text" },
+            { name: "firstName", placeholder: "First Name", type: "text", textOnly: true },
+            { name: "lastName", placeholder: "Last Name", type: "text", textOnly: true },
+            { name: "mobile", placeholder: "Mobile No", type: "number" },
             { name: "email", placeholder: "Email ID", type: "email" },
             { name: "street", placeholder: "Street", type: "text" },
-            { name: "city", placeholder: "City", type: "text" },
-            { name: "state", placeholder: "State", type: "text" },
-            { name: "country", placeholder: "Country", type: "text" },
+            { name: "city", placeholder: "City", type: "text", textOnly: true },
+            { name: "state", placeholder: "State", type: "text", textOnly: true },
+            { name: "country", placeholder: "Country", type: "text", textOnly: true },
             { name: "loginId", placeholder: "Login ID", type: "text" },
             { name: "password", placeholder: "Password", type: "password" },
           ].map((field) => (
@@ -103,7 +112,7 @@ const UserForm = () => {
               name={field.name}
               placeholder={field.placeholder}
               value={formData[field.name]}
-              onChange={handleChange}
+              onChange={field.textOnly ? handleTextOnlyInput : handleChange}
               required={["firstName", "lastName", "mobile", "email", "loginId", "password"].includes(
                 field.name
               )}
