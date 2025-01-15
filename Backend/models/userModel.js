@@ -44,10 +44,6 @@ const userSchema = new mongoose.Schema({
                 "Password must have at least 6 characters, 1 uppercase, 1 lowercase, 1 number, and 1 special character",
         },
     },
-    socketId: {
-        type: String,
-        required: false,
-    },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
 });

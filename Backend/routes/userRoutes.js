@@ -28,14 +28,13 @@ router.get("/Users", async (req, res) => {
     }
 });
 
-router.get("/user/:socketId", (req, res) => {
-    const { socketId } = req.params;
-
-    if (liveUsers[socketId]) {
-        res.status(200).send(liveUsers[socketId]);
+router.get('/User/:socketId', (req, res) => {
+    const socketId = req.params.socketId;
+    const user = liveUsers[socketId];
+    if (user) {
+        res.json(user);
     } else {
-        res.status(404).send({ error: "User not found" });
+        res.status(404).json({ error: 'User not found' });
     }
 });
-
 export default router;

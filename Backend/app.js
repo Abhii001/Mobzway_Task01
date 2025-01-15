@@ -34,8 +34,9 @@ app.use((err, req, res, next) => {
     res.status(500).send({ error: "Something went wrong!" });
 });
 
-// Serve static files
-app.use(express.static(path.join('public')));
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
+app.use(express.static(path.join(__dirname, 'Frontend')));
+
 
 let liveUsers = {};
 

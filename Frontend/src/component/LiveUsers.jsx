@@ -29,9 +29,20 @@ const LiveUsers = () => {
             const socket = io('http://localhost:3000');
             socket.emit('joinRoom', userData);
             socket.on('updateUserList', (updatedUsers) => setUsers(updatedUsers));
+
             return () => socket.disconnect();
         }
     }, [userData]);
+
+    const fetchUserInfo = async (socketId) => {
+        try {
+            const response = await fetch(`http://localhost:3000/user/${socketId}`);
+            const data = await response.json();
+            alert(`User Info:\nName: ${data.name}\nEmail: ${data.email}\nSocket ID: ${data.socketId}`);
+        } catch (error) {
+            alert('Error fetching user info');
+        }
+    };
 
     return (
         <div className="p-6 bg-gray-100 min-h-screen">
@@ -43,7 +54,7 @@ const LiveUsers = () => {
                     <li
                         key={index}
                         className="p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                        onClick={() => alert(`User Info:\nName: ${user.name}\nEmail: ${user.email}`)}
+                        onClick={() => fetchUserInfo(user.socketId)}
                     >
                         <div className="text-gray-700 font-semibold">{user.name}</div>
                         <div className="text-gray-500">{user.email}</div>
