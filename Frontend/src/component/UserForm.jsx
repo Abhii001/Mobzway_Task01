@@ -45,7 +45,7 @@ const UserForm = () => {
     };
 
     try {
-      const response = await fetch("https://mobzway-task01-3.onrender.com/saveUser", {
+      const response = await fetch("https://mobzway-task01.onrender.com/saveUser", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
