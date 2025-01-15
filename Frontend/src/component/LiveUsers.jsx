@@ -1,116 +1,58 @@
-import React, { useEffect, useState } from "react";
-import io from "socket.io-client";
+import React, { useState, useEffect } from 'react';
+import io from 'socket.io-client';
 
 const LiveUsers = () => {
-  const [userList, setUserList] = useState([]);
-  const [modalUser, setModalUser] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+    const [userData, setUserData] = useState({ name: '', email: '' });
+    const [users, setUsers] = useState([]);
 
-  // Fetch dynamic user data from localStorage
-  const email = localStorage.getItem("email"); // Assume it's set after login
-  const name = localStorage.getItem("name");   // Assume it's set after login
-  const userData = { email, name };  // This will be dynamic now
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const response = await fetch("https://mobzway-task01.onrender.com/Users");
+                if (!response.ok) throw new Error('Failed to fetch user data');
+                const data = await response.json();
+                const name = data.user.firstName;
+                const email = data.user.email;
+                setUserData({ name, email });
+                localStorage.setItem('name', name);
+                localStorage.setItem('email', email);
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        };
 
-  const socket = React.useMemo(() => io("https://mobzway-task01.onrender.com"), []);
+        fetchUserData();
+    }, []);
 
-  useEffect(() => {
-    // Join the "live users" room with dynamic user data
-    socket.emit("joinRoom", userData);
+    useEffect(() => {
+        if (userData.name && userData.email) {
+            const socket = io('http://localhost:3000');
+            socket.emit('joinRoom', userData);
+            socket.on('updateUserList', (updatedUsers) => setUsers(updatedUsers));
+            return () => socket.disconnect();
+        }
+    }, [userData]);
 
-    // Listen for updates to the user list
-    socket.on("updateUserList", (liveUsers) => {
-      setUserList(Object.values(liveUsers));
-    });
-
-    // Cleanup on component unmount
-    return () => {
-      socket.disconnect();
-    };
-  }, [socket, userData]); // Added `userData` as a dependency
-
-  const showUserDetails = async (socketId) => {
-    setLoading(true);
-    setError("");
-    try {
-      const response = await fetch(`https://mobzway-task01.onrender.com/user/${socketId}`);
-      if (!response.ok) throw new Error("Failed to fetch user details.");
-      const userDetails = await response.json();
-      setModalUser(userDetails);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const closeModal = () => {
-    setModalUser(null);
-    setError(""); // Reset error when closing modal
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-2xl font-bold mb-4">Live Users</h1>
-
-      {/* User List */}
-      <div className="space-y-4">
-        {userList.length === 0 ? (
-          <p>No live users available.</p>
-        ) : (
-          userList.map((user) => (
-            <div
-              key={user.socketId}
-              className="p-4 bg-white shadow-md rounded-md cursor-pointer hover:bg-gray-200 transition"
-              onClick={() => showUserDetails(user.socketId)}
-            >
-              <p className="text-lg font-medium">
-                {user.email} - {user.socketId}
-              </p>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Modal for User Details */}
-      {modalUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-            <h2 className="text-xl font-bold mb-4">User Details</h2>
-            <p>
-              <strong>Name:</strong> {modalUser.name}
-            </p>
-            <p>
-              <strong>Email:</strong> {modalUser.email}
-            </p>
-            <p>
-              <strong>Socket ID:</strong> {modalUser.socketId}
-            </p>
-            <button
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-800"
-              onClick={closeModal}
-            >
-              Close
-            </button>
-          </div>
+    return (
+        <div className="p-6 bg-gray-100 min-h-screen">
+            <h1 className="text-center text-2xl font-bold text-gray-800 border-b pb-4 mb-4">
+                Live Users
+            </h1>
+            <ul className="space-y-4">
+                {users.map((user, index) => (
+                    <li
+                        key={index}
+                        className="p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                        onClick={() => alert(`User Info:\nName: ${user.name}\nEmail: ${user.email}`)}
+                    >
+                        <div className="text-gray-700 font-semibold">{user.name}</div>
+                        <div className="text-gray-500">{user.email}</div>
+                        <small className="text-gray-400">Socket ID: {user.socketId}</small>
+                    </li>
+                ))}
+            </ul>
         </div>
-      )}
-
-      {/* Loading Spinner */}
-      {loading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="text-white text-xl">Loading...</div>
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-md">
-          {error}
-        </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default LiveUsers;

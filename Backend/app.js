@@ -1,12 +1,11 @@
-// app.js
 import express from "express";
-import cors from "cors";
 import connectDB from "./config/dbConfig.js";
 import userRoutes from "./routes/userRoutes.js";
 import setupMiddlewares from "./config/middlewares.js";
 import http from "http";
 import { Server } from "socket.io";
 import mongoose from "mongoose";
+import path from "path";
 
 const app = express();
 const PORT = process.env.PORT || 5100;
@@ -20,9 +19,6 @@ const io = new Server(server, {
         methods: ["GET", "POST"],
     },
 });
-
-
-let liveUsers = {};
 
 connectDB();
 setupMiddlewares(app);
@@ -38,28 +34,28 @@ app.use((err, req, res, next) => {
     res.status(500).send({ error: "Something went wrong!" });
 });
 
-io.on("connection", (socket) => {
-    console.log("A user connected: " + socket.id);
+// Serve static files
+app.use(express.static(path.join('public')));
 
-    socket.on("joinRoom", (userData) => {
-        if (!userData || !userData.email || !userData.name) {
-            console.error("Invalid user data");
-            return;
-        }
+let liveUsers = {};
 
-        liveUsers[socket.id] = userData;
-        socket.join("live users");
-        console.log(`${userData.email} joined the room "live users"`);
-        io.to("live users").emit("updateUserList", liveUsers);
+io.on('connection', (socket) => {
+    console.log(`New user connected: ${socket.id}`);
+
+    socket.on('joinRoom', (userData) => {
+        const { email, name } = userData;
+
+        liveUsers[socket.id] = { email, name, socketId: socket.id };
+
+        socket.join('live users');
+        
+        io.to('live users').emit('updateUserList', Object.values(liveUsers));
     });
 
-    socket.on("disconnect", () => {
-        const disconnectedUser = liveUsers[socket.id];
-        if (disconnectedUser) {
-            console.log(`User disconnected: ${disconnectedUser.email}`);
-            delete liveUsers[socket.id];
-            io.to("live users").emit("updateUserList", liveUsers);
-        }
+    socket.on('disconnect', () => {
+        console.log(`User disconnected: ${socket.id}`);
+        delete liveUsers[socket.id];
+        io.to('live users').emit('updateUserList', Object.values(liveUsers));
     });
 });
 
