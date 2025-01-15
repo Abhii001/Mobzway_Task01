@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 5100;
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "https://mobzway-task01.onrender.com",
+    origin: "http://localhost:5173" || "https://mobzway-task01.onrender.com",
     methods: ["GET", "POST"],
   },
 });
