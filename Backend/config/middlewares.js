@@ -4,7 +4,9 @@ import helmet from "helmet";
 
 const setupMiddlewares = (app) => {
     app.use(bodyParser.json());
-    app.use(cors());
+    cors({
+        origin: process.env.ALLOWED_ORIGIN || "http://localhost:5173",
+    });
     app.use(helmet());
 };
 
