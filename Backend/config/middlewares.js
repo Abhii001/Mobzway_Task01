@@ -4,7 +4,7 @@ import helmet from "helmet";
 
 const allowedOrigins = [
     'https://nodetask01mobzway.netlify.app',
-    'http://localhost:5174/'
+    'http://localhost:5174'
 ];
 
 const setupMiddlewares = (app) => {
