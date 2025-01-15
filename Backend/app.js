@@ -20,6 +20,7 @@ const io = new Server(server, {
     },
 });
 
+
 connectDB();
 setupMiddlewares(app);
 
