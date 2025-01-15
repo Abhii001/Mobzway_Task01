@@ -2,13 +2,17 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import helmet from "helmet";
 
-const allowedOrigins = ['https://nodetask01mobzway.netlify.app'];
+const allowedOrigins = [
+    'https://nodetask01mobzway.netlify.app',
+    'http://localhost:5173'
+];
 
 const setupMiddlewares = (app) => {
     app.use(bodyParser.json());
+
     app.use(cors({
         origin: (origin, callback) => {
-            if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            if (!origin || allowedOrigins.includes(origin)) {
                 callback(null, true);
             } else {
                 callback(new Error('Not allowed by CORS'));

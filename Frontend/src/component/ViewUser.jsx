@@ -48,8 +48,9 @@ const ViewUsers = () => {
                   <td className="px-4 py-2 border">{user.mobile}</td>
                   <td className="px-4 py-2 border">{user.email}</td>
                   <td className="px-4 py-2 border">
-                    {user.address.street}, {user.address.city},{" "}
-                    {user.address.state}, {user.address.country}
+                    {user.address
+                      ? `${user.address.street}, ${user.address.city}, ${user.address.state}, ${user.address.country}`
+                      : "No address available"}
                   </td>
                 </tr>
               ))

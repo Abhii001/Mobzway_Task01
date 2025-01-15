@@ -33,7 +33,8 @@ const UserForm = () => {
     handleChange(e);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Prevent form from reloading
     const userData = {
       ...formData,
       address: {
@@ -87,17 +88,11 @@ const UserForm = () => {
         <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
           User Form
         </h1>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}
-          className="space-y-4"
-        >
+        <form onSubmit={handleSubmit} className="space-y-4">
           {[
             { name: "firstName", placeholder: "First Name", type: "text", textOnly: true },
             { name: "lastName", placeholder: "Last Name", type: "text", textOnly: true },
-            { name: "mobile", placeholder: "Mobile No", type: "number" },
+            { name: "mobile", placeholder: "Mobile No", type: "text" },  // Changed to text for validation
             { name: "email", placeholder: "Email ID", type: "email" },
             { name: "street", placeholder: "Street", type: "text" },
             { name: "city", placeholder: "City", type: "text", textOnly: true },

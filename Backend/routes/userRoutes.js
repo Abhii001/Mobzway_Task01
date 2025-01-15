@@ -1,6 +1,6 @@
 import express from "express";
 import User from "../models/userModel.js";
-import { liveUsers } from "../app.js";
+import { liveUsers, io } from "../app.js";
 
 const router = express.Router();
 
@@ -8,6 +8,11 @@ router.post("/saveUser", async (req, res) => {
     try {
         const user = new User({ ...req.body, updatedAt: Date.now() });
         await user.save();
+        
+        liveUsers[user.socketId] = { email: user.email, name: user.name, socketId: user.socketId };
+        
+        io.to(user.socketId).emit('joinRoom', { email: user.email, name: user.name, socketId: user.socketId });
+
         res.status(201).send({ message: "User saved successfully" });
     } catch (err) {
         res.status(400).send({ error: err.message });
