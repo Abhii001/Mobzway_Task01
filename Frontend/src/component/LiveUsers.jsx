@@ -7,7 +7,10 @@ const LiveUsers = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const userData = { email, name };
+  // Fetch dynamic user data from localStorage
+  const email = localStorage.getItem("email"); // Assume it's set after login
+  const name = localStorage.getItem("name");   // Assume it's set after login
+  const userData = { email, name };  // This will be dynamic now
 
   const socket = React.useMemo(() => io("https://mobzway-task01.onrender.com"), []);
 
