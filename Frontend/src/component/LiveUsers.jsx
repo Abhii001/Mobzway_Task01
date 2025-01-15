@@ -1,102 +1,93 @@
 import React, { useState, useEffect } from "react";
-import { io } from "socket.io-client";
+import io from "socket.io-client";
 
 const LiveUsers = () => {
-  const [users, setUsers] = useState([]);
-  const [popupData, setPopupData] = useState(null);
-  const [popupVisible, setPopupVisible] = useState(false);
+  const [userList, setUserList] = useState([]);
+  const [modalUser, setModalUser] = useState(null);
+  const [socket] = useState(io("/"));
 
   useEffect(() => {
-    const socket = io("https://mobzway-task01-3.onrender.com");
-  
-    socket.on("connect_error", (err) => {
-      console.error("Socket connection error:", err.message);
+    // Join the "live users" room with user data
+    const userData = { email: "user@example.com", name: "John Doe" }; // Replace this with dynamic user data
+    socket.emit("joinRoom", userData);
+
+    // Listen for the updated user list
+    socket.on("updateUserList", (liveUsers) => {
+      setUserList(Object.values(liveUsers));
     });
-  
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch("https://mobzway-task01-3.onrender.com/saveUser");
-        if (!response.ok) {
-          throw new Error("Failed to fetch user data");
-        }
-        const userData = await response.json();
-  
-        socket.emit("joinRoom", {
-          email: userData.email,
-          name: userData.name,
-        });
-      } catch (error) {
-        console.error("Error fetching user data:", error.message);
-      }
-    };
-  
-    fetchUserData();
-  
-    socket.on("updateUserList", (updatedUsers) => {
-      setUsers(updatedUsers);
-    });
-  
+
+    // Cleanup on component unmount
     return () => {
       socket.disconnect();
     };
-  }, []);  
+  }, [socket]);
 
-  const showUserInfo = async (email, socketId) => {
+  // Show the user details in a modal
+  const showUserDetails = async (socketId) => {
     try {
-      const response = await fetch(`/getUserInfo?email=${encodeURIComponent(email)}`);
-      const data = await response.json();
-      setPopupData({ ...data, socketId });
-      setPopupVisible(true);
+      const response = await fetch(`/user/${socketId}`);
+      const userDetails = await response.json();
+      setModalUser(userDetails);
     } catch (error) {
-      alert("Error fetching user info: " + error.message);
+      console.error("Error fetching user details:", error);
     }
   };
 
-  const closePopup = () => {
-    setPopupVisible(false);
-    setPopupData(null);
+  const closeModal = () => {
+    setModalUser(null);
   };
 
   return (
-    <div className="font-sans p-6">
-      <h1 className="text-2xl font-bold mb-4">Live Users</h1>
-      <div className="space-y-3">
-        {users.map((user) => (
-          <div key={user.socketId} className="text-blue-600 hover:underline">
-            <button
-              className="text-left"
-              onClick={() => showUserInfo(user.email, user.socketId)}
-            >
-              {user.email} ({user.socketId})
-            </button>
+    <div>
+      <h1>Live Users</h1>
+      <div id="userList" style={{ marginTop: "20px" }}>
+        {userList.map((user) => (
+          <div
+            key={user.socketId}
+            className="user"
+            style={{
+              margin: "10px 0",
+              padding: "5px",
+              border: "1px solid #ddd",
+              cursor: "pointer",
+            }}
+            onClick={() => showUserDetails(user.socketId)}
+          >
+            <strong>{user.name}</strong> ({user.email}) - Socket ID:{" "}
+            {user.socketId}
           </div>
         ))}
       </div>
 
-      {popupVisible && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-96">
-            <button
-              className="ml-auto mb-4 bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded"
-              onClick={closePopup}
-            >
-              Close
-            </button>
-            {popupData && (
-              <div>
-                <h2 className="text-xl font-semibold mb-4">User Info</h2>
-                <p className="mb-2">
-                  <span className="font-medium">Email:</span> {popupData.email}
-                </p>
-                <p className="mb-2">
-                  <span className="font-medium">Name:</span> {popupData.name}
-                </p>
-                <p>
-                  <span className="font-medium">Socket ID:</span>{" "}
-                  {popupData.socketId}
-                </p>
-              </div>
-            )}
+      {modalUser && (
+        <div
+          id="userModal"
+          style={{
+            display: "flex",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              padding: "20px",
+              width: "300px",
+            }}
+          >
+            <h2>User Details</h2>
+            <p>
+              <strong>Name:</strong> {modalUser.name} <br />
+              <strong>Email:</strong> {modalUser.email} <br />
+              <strong>Socket ID:</strong> {modalUser.socketId}
+            </p>
+            <button onClick={closeModal}>Close</button>
           </div>
         </div>
       )}

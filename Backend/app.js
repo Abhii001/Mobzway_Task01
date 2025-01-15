@@ -1,53 +1,58 @@
 import express from "express";
-import bodyParser from "body-parser";
-import cors from "cors";
-import http from "http";
-import { Server as socketIo } from "socket.io";
 import connectDB from "./config/dbConfig.js";
 import userRoutes from "./routes/userRoutes.js";
+import setupMiddlewares from "./config/middlewares.js";
+import http from "http";
+import { Server } from "socket.io";
 
 const app = express();
-const PORT = process.env.port || 5100;
+const PORT = process.env.PORT || 5100;
 const server = http.createServer(app);
-const io = new socketIo(server, {
-  cors: {
-    origin: "http://localhost:5173/",
-    methods: ["GET", "POST"],
-  },
-});
+const io = new Server(server);
 
-app.use(bodyParser.json());
-app.use(cors());
+let liveUsers = {};
 
 connectDB();
 
+setupMiddlewares(app);
+
+app.get("/health", (req, res) => {
+  res.status(200).send({ message: "Server is healthy!" });
+});
+
 app.use("/", userRoutes);
 
-let liveUsers = [];
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send({ error: "Something went wrong!" });
+});
 
 io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
+  console.log("A user connected: " + socket.id);
 
   socket.on("joinRoom", (userData) => {
-    const { email, name } = userData;
-
+    liveUsers[socket.id] = userData;
     socket.join("live users");
-
-    const user = { email, name, socketId: socket.id };
-    liveUsers.push(user);
+    console.log(`${userData.email} joined the room "live users"`);
 
     io.to("live users").emit("updateUserList", liveUsers);
   });
 
+  //user disconnects
   socket.on("disconnect", () => {
-    console.log("A user disconnected:", socket.id);
-
-    liveUsers = liveUsers.filter((user) => user.socketId !== socket.id);
-
+    delete liveUsers[socket.id];
     io.to("live users").emit("updateUserList", liveUsers);
+    console.log("User disconnected: " + socket.id);
   });
 });
 
+// Start the server
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+});
+
+process.on("SIGINT", async () => {
+  console.log("Gracefully shutting down...");
+  await mongoose.connection.close();
+  process.exit(0);
 });
