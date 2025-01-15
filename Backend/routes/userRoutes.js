@@ -7,17 +7,29 @@ const router = express.Router();
 router.post("/saveUser", async (req, res) => {
     try {
         const user = new User({ ...req.body, updatedAt: Date.now() });
+
         await user.save();
-        
-        liveUsers[user.socketId] = { email: user.email, name: user.name, socketId: user.socketId };
-        
-        io.to(user.socketId).emit('joinRoom', { email: user.email, name: user.name, socketId: user.socketId });
+
+        const socketId = req.body.socketId;
+
+        liveUsers[socketId] = { 
+            email: user.email, 
+            name: user.name, 
+            socketId: socketId 
+        };
+
+        io.to(socketId).emit('joinRoom', { 
+            email: user.email, 
+            name: user.name, 
+            socketId: socketId 
+        });
 
         res.status(201).send({ message: "User saved successfully" });
     } catch (err) {
         res.status(400).send({ error: err.message });
     }
 });
+
 
 router.get("/Users", async (req, res) => {
     try {
