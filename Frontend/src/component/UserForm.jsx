@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import io from "socket.io-client";
 
 const UserForm = () => {
   const [formData, setFormData] = useState({
@@ -34,7 +35,8 @@ const UserForm = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent form from reloading
+    e.preventDefault();
+
     const userData = {
       ...formData,
       address: {
@@ -45,36 +47,46 @@ const UserForm = () => {
       },
     };
 
-    try {
-      const response = await fetch("https://mobzway-task01.onrender.com/saveUser", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
+    const socket = io("https://mobzway-task01.onrender.com");
+    socket.on("connect", async () => {
+      try {
+        const socketId = socket.id;
+        const userDataForSocket = {
+          email: formData.email,
+          name: `${formData.firstName} ${formData.lastName}`,
+          socketId: socketId,
+        };
 
-      const result = await response.json();
-      if (response.ok) {
-        alert(result.message);
-        setFormData({
-          firstName: "",
-          lastName: "",
-          mobile: "",
-          email: "",
-          street: "",
-          city: "",
-          state: "",
-          country: "",
-          loginId: "",
-          password: "",
+        const response = await fetch("https://mobzway-task01.onrender.com/saveUser", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(userDataForSocket),
         });
-      } else {
-        throw new Error(result.error);
+
+        const result = await response.json();
+        if (response.ok) {
+          alert(result.message); 
+          setFormData({
+            firstName: "",
+            lastName: "",
+            mobile: "",
+            email: "",
+            street: "",
+            city: "",
+            state: "",
+            country: "",
+            loginId: "",
+            password: "",
+          });
+        } else {
+          throw new Error(result.error);
+        }
+      } catch (error) {
+        alert(`Error: ${error.message}`);
       }
-    } catch (error) {
-      alert(`Error: ${error.message}`);
-    }
+    });
   };
 
   return (
@@ -92,7 +104,7 @@ const UserForm = () => {
           {[
             { name: "firstName", placeholder: "First Name", type: "text", textOnly: true },
             { name: "lastName", placeholder: "Last Name", type: "text", textOnly: true },
-            { name: "mobile", placeholder: "Mobile No", type: "text" },  // Changed to text for validation
+            { name: "mobile", placeholder: "Mobile No", type: "text" },
             { name: "email", placeholder: "Email ID", type: "email" },
             { name: "street", placeholder: "Street", type: "text" },
             { name: "city", placeholder: "City", type: "text", textOnly: true },
@@ -108,9 +120,7 @@ const UserForm = () => {
               placeholder={field.placeholder}
               value={formData[field.name]}
               onChange={field.textOnly ? handleTextOnlyInput : handleChange}
-              required={["firstName", "lastName", "mobile", "email", "loginId", "password"].includes(
-                field.name
-              )}
+              required={["firstName", "lastName", "mobile", "email", "loginId", "password"].includes(field.name)}
               className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           ))}
