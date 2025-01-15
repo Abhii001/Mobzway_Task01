@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import io from "socket.io-client"; // Add socket.io-client import
 
 const UserForm = () => {
   const [formData, setFormData] = useState({
@@ -17,18 +16,6 @@ const UserForm = () => {
     password: "",
   });
 
-  useEffect(() => {
-    const socket = io("https://mobzway-task01.onrender.com");
-
-    socket.on("connect", () => {
-      console.log("Socket connected with ID:", socket.id);
-    });
-
-    return () => {
-      socket.disconnect(); // Cleanup the socket connection
-    };
-  }, []);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -37,33 +24,25 @@ const UserForm = () => {
     }));
   };
 
-  const handleMobileInput = (e) => {
+  const handleTextOnlyInput = (e) => {
     const { value, name } = e.target;
-    if (!/^\d+$/.test(value)) {
-      alert(`${name} field accepts numbers only.`);
-      e.target.value = value.replace(/\D/g, ""); // Remove non-numeric characters
+    if (/[0-9]/.test(value)) {
+      alert(`${name} field accepts text only. Please avoid entering numbers.`);
+      e.target.value = value.replace(/[0-9]/g, "");
     }
     handleChange(e);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Check for missing required fields
-    const requiredFields = ["firstName", "lastName", "mobile", "email", "loginId", "password"];
-    for (const field of requiredFields) {
-      if (!formData[field]) {
-        alert(`Please fill out the ${field} field.`);
-        return;
-      }
-    }
-
-    const socket = io("https://mobzway-task01.onrender.com");
-    const socketId = socket.id;
-    const userDataForSocket = {
-      email: formData.email,
-      name: `${formData.firstName} ${formData.lastName}`,
-      socketId: socketId,
+    const userData = {
+      ...formData,
+      address: {
+        street: formData.street,
+        city: formData.city,
+        state: formData.state,
+        country: formData.country,
+      },
     };
 
     try {
@@ -72,7 +51,7 @@ const UserForm = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(userDataForSocket),
+        body: JSON.stringify(userData),
       });
 
       const result = await response.json();
@@ -106,13 +85,39 @@ const UserForm = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">User Form</h1>
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
+          User Form
+        </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {[...]}  {/* Fields rendering, similar as before */}
+          {[
+            { name: "firstName", placeholder: "First Name", type: "text", textOnly: true },
+            { name: "lastName", placeholder: "Last Name", type: "text", textOnly: true },
+            { name: "mobile", placeholder: "Mobile No", type: "text" },  // Changed to text for validation
+            { name: "email", placeholder: "Email ID", type: "email" },
+            { name: "street", placeholder: "Street", type: "text" },
+            { name: "city", placeholder: "City", type: "text", textOnly: true },
+            { name: "state", placeholder: "State", type: "text", textOnly: true },
+            { name: "country", placeholder: "Country", type: "text", textOnly: true },
+            { name: "loginId", placeholder: "Login ID", type: "text" },
+            { name: "password", placeholder: "Password", type: "password" },
+          ].map((field) => (
+            <input
+              key={field.name}
+              type={field.type}
+              name={field.name}
+              placeholder={field.placeholder}
+              value={formData[field.name]}
+              onChange={field.textOnly ? handleTextOnlyInput : handleChange}
+              required={["firstName", "lastName", "mobile", "email", "loginId", "password"].includes(
+                field.name
+              )}
+              className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+          ))}
 
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-green-500 via-green-600 to-green-700 text-white font-semibold py-3 px-6 rounded-md shadow-lg"
+            className="w-full bg-gradient-to-r from-green-500 via-green-600 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50"
           >
             Save
           </button>
@@ -120,7 +125,7 @@ const UserForm = () => {
           <Link to="/ViewUser">
             <button
               type="button"
-              className="w-full mt-4 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white font-semibold py-3 px-6 rounded-md shadow-lg"
+              className="w-full mt-4 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
             >
               View Users
             </button>
