@@ -15,16 +15,19 @@ const LiveUsers = () => {
   const socket = React.useMemo(() => io("https://mobzway-task01.onrender.com"), []);
 
   useEffect(() => {
+    // Join the "live users" room with dynamic user data
     socket.emit("joinRoom", userData);
 
+    // Listen for updates to the user list
     socket.on("updateUserList", (liveUsers) => {
       setUserList(Object.values(liveUsers));
     });
 
+    // Cleanup on component unmount
     return () => {
       socket.disconnect();
     };
-  }, [socket, userData]); 
+  }, [socket, userData]); // Added `userData` as a dependency
 
   const showUserDetails = async (socketId) => {
     setLoading(true);
@@ -43,13 +46,14 @@ const LiveUsers = () => {
 
   const closeModal = () => {
     setModalUser(null);
-    setError("");
+    setError(""); // Reset error when closing modal
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <h1 className="text-2xl font-bold mb-4">Live Users</h1>
 
+      {/* User List */}
       <div className="space-y-4">
         {userList.length === 0 ? (
           <p>No live users available.</p>
@@ -68,6 +72,7 @@ const LiveUsers = () => {
         )}
       </div>
 
+      {/* Modal for User Details */}
       {modalUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
@@ -91,12 +96,14 @@ const LiveUsers = () => {
         </div>
       )}
 
+      {/* Loading Spinner */}
       {loading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="text-white text-xl">Loading...</div>
         </div>
       )}
 
+      {/* Error Message */}
       {error && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-md">
           {error}

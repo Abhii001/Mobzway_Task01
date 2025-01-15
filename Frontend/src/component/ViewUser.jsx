@@ -9,12 +9,13 @@ const ViewUsers = () => {
       try {
         const response = await fetch("https://mobzway-task01.onrender.com/Users");
         if (!response.ok) {
-          throw new Error("Failed to fetch users");
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
         setUsers(data);
       } catch (err) {
-        setError(err.message);
+        console.error("Error fetching users:", err);
+        setError(err.message || "Unknown error");
       }
     };
 

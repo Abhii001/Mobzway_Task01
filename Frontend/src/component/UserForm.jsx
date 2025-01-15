@@ -127,7 +127,7 @@ const UserForm = () => {
             Save
           </button>
 
-          <Link to="/ViewUser">
+          <Link to="/viewUser">
             <button
               type="button"
               className="w-full mt-4 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
