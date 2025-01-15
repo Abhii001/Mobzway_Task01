@@ -42,6 +42,7 @@ const LiveUsers = () => {
 
   const closeModal = () => {
     setModalUser(null);
+    setError(""); // Reset error when closing modal
   };
 
   return (
@@ -50,17 +51,21 @@ const LiveUsers = () => {
 
       {/* User List */}
       <div className="space-y-4">
-        {userList.map((user) => (
-          <div
-            key={user.socketId}
-            className="p-4 bg-white shadow-md rounded-md cursor-pointer hover:bg-gray-200 transition"
-            onClick={() => showUserDetails(user.socketId)}
-          >
-            <p className="text-lg font-medium">
-              {user.email} - {user.socketId}
-            </p>
-          </div>
-        ))}
+        {userList.length === 0 ? (
+          <p>No live users available.</p>
+        ) : (
+          userList.map((user) => (
+            <div
+              key={user.socketId}
+              className="p-4 bg-white shadow-md rounded-md cursor-pointer hover:bg-gray-200 transition"
+              onClick={() => showUserDetails(user.socketId)}
+            >
+              <p className="text-lg font-medium">
+                {user.email} - {user.socketId}
+              </p>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Modal for User Details */}
