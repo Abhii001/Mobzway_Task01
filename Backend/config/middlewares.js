@@ -4,9 +4,9 @@ import helmet from "helmet";
 
 const setupMiddlewares = (app) => {
     app.use(bodyParser.json());
-    cors({
-        origin: process.env.ALLOWED_ORIGIN || "http://localhost:5173",
-    });
+    app.use(cors({
+        origin: ['http://localhost:5173', 'https://mobzway-task01.onrender.com'],
+    }))
     app.use(helmet());
 };
 
