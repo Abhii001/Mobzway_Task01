@@ -4,7 +4,7 @@ import helmet from "helmet";
 
 const allowedOrigins = [
     'https://nodetask01mobzway.netlify.app',
-    'http://localhost:5173'
+    'http://localhost:5174/'
 ];
 
 const setupMiddlewares = (app) => {
@@ -15,10 +15,11 @@ const setupMiddlewares = (app) => {
             if (!origin || allowedOrigins.includes(origin)) {
                 callback(null, true);
             } else {
-                callback(new Error('Not allowed by CORS'));
+                callback(new Error('CORS policy: Access denied from this origin'));
             }
         },
         methods: ['GET', 'POST'],
+        credentials: true,
     }));
 
     app.use(helmet());
