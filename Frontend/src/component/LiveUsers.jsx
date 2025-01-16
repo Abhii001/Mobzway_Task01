@@ -1,58 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
-import Modal from './Model';
+import Model from "./Model"
 
 const LiveUsers = () => {
-    const [userData, setUserData] = useState({ name: '', email: '' });
     const [users, setUsers] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userInfo, setUserInfo] = useState(null);
 
     useEffect(() => {
-        const fetchUserData = async () => {
+        const fetchUsers = async () => {
             try {
                 const response = await fetch("https://mobzway-task01.onrender.com/Users");
-                if (!response.ok) throw new Error('Failed to fetch user data');
+                if (!response.ok) throw new Error('Failed to fetch users');
                 const data = await response.json();
-
-                console.log(data);
-
-                if (Array.isArray(data) && data.length > 0) {
-                    setUsers(data);
-                    const firstUser = data[0];
-                    const name = firstUser.firstName;
-                    const email = firstUser.email;
-                    setUserData({ name, email });
-                    localStorage.setItem('name', name);
-                    localStorage.setItem('email', email);
-                } else {
-                    throw new Error("User data is missing or in the wrong format");
-                }
+                setUsers(data);
             } catch (error) {
-                console.error('Error fetching user data:', error);
+                console.error('Error fetching users:', error);
             }
         };
-        fetchUserData();
+
+        fetchUsers();
+
+        const socket = io('https://mobzway-task01.onrender.com');
+        socket.emit('joinRoom', { name: 'Live User Page' });
+
+        socket.on('updateUserList', (updatedUsers) => {
+            setUsers(updatedUsers);
+        });
+
+        return () => {
+            socket.disconnect();
+        };
     }, []);
-
-    useEffect(() => {
-        if (userData.name && userData.email) {
-            const socket = io('https://mobzway-task01.onrender.com');
-            socket.emit('joinRoom', userData);
-            socket.on('updateUserList', (updatedUsers) => setUsers(updatedUsers));
-
-            return () => socket.disconnect();
-        }
-    }, [userData]);
 
     const fetchUserInfo = async (socketId) => {
         try {
             const response = await fetch(`https://mobzway-task01.onrender.com/User/${socketId}`);
+            if (!response.ok) throw new Error('Failed to fetch user info');
             const data = await response.json();
             setUserInfo(data);
             setIsModalOpen(true);
         } catch (error) {
-            alert('Error fetching user info');
+            console.error('Error fetching user info:', error);
         }
     };
 
@@ -77,11 +66,13 @@ const LiveUsers = () => {
                 ))}
             </ul>
 
-            <Modal 
-                isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
-                userInfo={userInfo} 
-            />
+            {isModalOpen && (
+                <Modal 
+                    isOpen={isModalOpen} 
+                    onClose={() => setIsModalOpen(false)} 
+                    userInfo={userInfo} 
+                />
+            )}
         </div>
     );
 };

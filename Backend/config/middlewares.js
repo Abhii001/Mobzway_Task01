@@ -3,8 +3,9 @@ import cors from "cors";
 import helmet from "helmet";
 
 const allowedOrigins = [
+    'http://localhost:5173',
     'https://nodetask01mobzway.netlify.app',
-    'http://localhost:5174'
+    'https://mobzway-task01.onrender.com'
 ];
 
 const setupMiddlewares = (app) => {
@@ -18,7 +19,8 @@ const setupMiddlewares = (app) => {
                 callback(new Error('CORS policy: Access denied from this origin'));
             }
         },
-        methods: ['GET', 'POST'],
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
         credentials: true,
     }));
 
