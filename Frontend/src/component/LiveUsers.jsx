@@ -37,7 +37,7 @@ const LiveUsers = () => {
 
     useEffect(() => {
         if (userData.name && userData.email) {
-            const socket = io('http://localhost:5100');
+            const socket = io('https://mobzway-task01.onrender.com');
             socket.emit('joinRoom', userData);
             socket.on('updateUserList', (updatedUsers) => setUsers(updatedUsers));
 
@@ -47,7 +47,7 @@ const LiveUsers = () => {
 
     const fetchUserInfo = async (socketId) => {
         try {
-            const response = await fetch(`http://localhost:5100/User/${socketId}`);
+            const response = await fetch(`https://mobzway-task01.onrender.com/User/${socketId}`);
             const data = await response.json();
             setUserInfo(data);
             setIsModalOpen(true);
