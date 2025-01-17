@@ -9,8 +9,10 @@ const allowedOrigins = [
 ];
 
 const setupMiddlewares = (app) => {
+    // Use body-parser to parse JSON request bodies
     app.use(bodyParser.json());
 
+    // Use CORS to allow specific origins and control request methods and headers
     app.use(cors({
         origin: (origin, callback) => {
             if (!origin || allowedOrigins.includes(origin)) {
@@ -24,6 +26,7 @@ const setupMiddlewares = (app) => {
         credentials: true,
     }));
 
+    // Use Helmet to secure HTTP headers
     app.use(helmet());
 };
 
