@@ -13,17 +13,18 @@ router.post("/saveUser", async (req, res) => {
             return res.status(400).json({ error: "Missing required fields: email, name" });
         }
 
-        const user = new User({ ...req.body, updatedAt: Date.now() });
+        const user = new User({
+            ...req.body,
+            updatedAt: Date.now()
+        });
         await user.save();
 
-        users[socketId] = { email, name, socketId };
-        io.to(socketId).emit("joinRoom", { email, name, socketId });
-
-        res.status(201).send({ message: "User saved successfully" });
+        res.status(201).json({ message: "User saved successfully" });
     } catch (err) {
-        res.status(500).send({ error: err.message });
+        res.status(500).json({ error: err.message });
     }
 });
+
 
 // Route to get all users (DB + Socket.IO)
 router.get("/Users", async (req, res) => {
