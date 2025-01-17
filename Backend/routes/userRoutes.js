@@ -7,10 +7,10 @@ const router = express.Router();
 // Route to save a user
 router.post("/saveUser", async (req, res) => {
     try {
-        const { email, name, socketId } = req.body;
+        const { email, name } = req.body;
 
-        if (!email || !name || !socketId) {
-            return res.status(400).json({ error: "Missing required fields: email, name, socketId" });
+        if (!email || !name) {
+            return res.status(400).json({ error: "Missing required fields: email, name" });
         }
 
         const user = new User({ ...req.body, updatedAt: Date.now() });
