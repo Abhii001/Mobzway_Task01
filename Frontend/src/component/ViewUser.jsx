@@ -30,6 +30,7 @@ const ViewUsers = () => {
         <table className="w-full border-collapse shadow-md">
           <thead>
             <tr className="bg-blue-600 text-white">
+              <th className="px-4 py-2 text-left font-medium">Login ID</th>
               <th className="px-4 py-2 text-left font-medium">First Name</th>
               <th className="px-4 py-2 text-left font-medium">Last Name</th>
               <th className="px-4 py-2 text-left font-medium">Mobile</th>
@@ -44,6 +45,7 @@ const ViewUsers = () => {
                   key={index}
                   className="bg-gray-100 hover:bg-gray-200 transition-colors"
                 >
+                  <td className="px-4 py-2 border">{user.loginId}</td>
                   <td className="px-4 py-2 border">{user.firstName}</td>
                   <td className="px-4 py-2 border">{user.lastName}</td>
                   <td className="px-4 py-2 border">{user.mobile}</td>
@@ -57,7 +59,7 @@ const ViewUsers = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="text-center p-4 text-gray-600">
+                <td colSpan="6" className="text-center p-4 text-gray-600">
                   No users found
                 </td>
               </tr>

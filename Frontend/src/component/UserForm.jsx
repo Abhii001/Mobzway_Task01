@@ -94,7 +94,7 @@ const UserForm = () => {
           }}
           className="space-y-4"
         >
-          {[
+          {[ 
             { name: "firstName", placeholder: "First Name", type: "text", textOnly: true },
             { name: "lastName", placeholder: "Last Name", type: "text", textOnly: true },
             { name: "mobile", placeholder: "Mobile No", type: "number" },

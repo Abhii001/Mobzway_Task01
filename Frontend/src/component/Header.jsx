@@ -19,23 +19,23 @@ const Header = () => {
           </Link>
           <style>
             {`
-                  .animate-blink {
-                    background-color: red;
-                    animation: blink 5s infinite alternate;
-                  }
-                  
-                  @keyframes blink {
-                    0% {
-                      background-color: red;
-                    }
-                    50% {
-                      background-color: green;
-                    }
-                    100% {
-                      background-color: red;
-                    }
-                  }
-                `}
+              .animate-blink {
+                background-color: red;
+                animation: blink 5s infinite alternate;
+              }
+
+              @keyframes blink {
+                0% {
+                  background-color: red;
+                }
+                50% {
+                  background-color: green;
+                }
+                100% {
+                  background-color: red;
+                }
+              }
+            `}
           </style>
         </div>
 
