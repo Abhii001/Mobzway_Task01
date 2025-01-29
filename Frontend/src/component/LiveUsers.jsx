@@ -9,7 +9,7 @@ const LiveUsers = () => {
     const [userInfo, setUserInfo] = useState(null);
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [userJoinedMessage, setUserJoinedMessage] = useState(null); // New state for the message
+    const [userJoinedMessage, setUserJoinedMessage] = useState(null);
 
     const socketUrl = "https://mobzway-task01.onrender.com";
     let socket;
@@ -64,7 +64,7 @@ const LiveUsers = () => {
 
         socket.on("userJoined", (data) => {
             console.log(data.message);
-            setUserJoinedMessage(data.message); // Set the message
+            setUserJoinedMessage(data.message);
         });
 
         socket.on("updateUserList", (updatedUsers) => {
@@ -110,6 +110,24 @@ const LiveUsers = () => {
         }
     }, [userJoinedMessage]);
 
+    const fetchUserInfo = async (userId) => {
+        try {
+            const response = await fetch(`${socketUrl}/User/${userId}`);
+            if (!response.ok) throw new Error("User not found");
+
+            const data = await response.json();
+            setUserInfo(data);
+            setIsModalOpen(true);
+        } catch (err) {
+            setError("Failed to find user.");
+        }
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setUserInfo(null);
+    };
+
     return (
         <div className="p-6 bg-gray-100 min-h-screen">
             <h1 className="text-center text-3xl font-extrabold text-gray-800 border-b pb-4 mb-6">
@@ -142,7 +160,7 @@ const LiveUsers = () => {
                             <li
                                 key={user.nanoId || nanoid()}
                                 className={`p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer ${!user.socketId ? "opacity-50 cursor-not-allowed" : ""}`}
-                                onClick={() => user._id ? fetchUserInfo(user._id) : console.warn(`No user ID found for user: ${user.firstName} ${user.lastName}`)}
+                                onClick={() => user._id ? fetchUserInfo(user._id) : console.warn(`No user ID found for ${user.firstName} ${user.lastName}`)}
                             >
                                 <div className="mb-4 flex items-center space-x-2">
                                     <div className={`w-3 h-3 rounded-full ${user.socketId ? "bg-green-500 glowing-dot" : "bg-gray-400"}`}></div>
