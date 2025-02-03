@@ -1,13 +1,13 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-    firstName: { 
-        type: String, 
-        required: true 
+    firstName: {
+        type: String,
+        required: true
     },
-    lastName: { 
-        type: String, 
-        required: true 
+    lastName: {
+        type: String,
+        required: true
     },
     mobile: {
         type: String,
@@ -53,13 +53,13 @@ const userSchema = new mongoose.Schema({
         trim: true,
         default: null,
     },
-    createdAt: { 
-        type: Date, 
-        default: Date.now 
+    createdAt: {
+        type: Date,
+        default: Date.now
     },
-    updatedAt: { 
-        type: Date, 
-        default: Date.now 
+    updatedAt: {
+        type: Date,
+        default: Date.now
     },
 });
 

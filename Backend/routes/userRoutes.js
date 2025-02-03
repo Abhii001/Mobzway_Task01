@@ -1,6 +1,5 @@
 import express from "express";
 import User from "../models/userModel.js";
-import { users, io } from "../app.js";
 
 const router = express.Router();
 
@@ -15,53 +14,27 @@ router.post("/saveUser", async (req, res) => {
     }
 });
 
-// Route to get all users (DB + Socket.IO)
+// Route to get all users
 router.get("/Users", async (req, res) => {
     try {
         const dbUsers = await User.find();
-
-        const socketUsers = Array.from(users.values());
-
-        const combinedUsers = [
-            ...dbUsers.map(({ _id, email, firstName, lastName, mobile, address, loginId, password, updatedAt, createdAt }) => ({
-                _id,
-                email,
-                firstName,
-                lastName,
-                mobile,
-                address,
-                loginId,
-                password,
-                updatedAt,
-                createdAt
-            })),
-            ...socketUsers,
-        ];
-
-        res.status(200).json(combinedUsers);
+        res.status(200).json(dbUsers);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// Route to fetch user by socketId (from DB and Map)
-router.get('/User/:userId', async (req, res) => {
-    const { userId } = req.params;
-
+// API to get user details by ID
+router.get('/getUserDetails/:id', async (req, res) => {
     try {
-        if (users.has(userId)) {
-            return res.json(users.get(userId));
+        const user = await User.findById(req.params.id);
+        if (user) {
+            res.json(user);
+        } else {
+            res.status(404).send('User not found');
         }
-
-        const user = await User.findById(userId);
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        res.json(user);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).send('Error fetching user details');
     }
 });
 

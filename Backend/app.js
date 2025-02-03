@@ -7,13 +7,13 @@ import { Server } from "socket.io";
 import mongoose from "mongoose";
 import path from "path";
 import dotenv from "dotenv";
+import User from "./models/userModel.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5100;
 
-// Create HTTP server and Socket.IO instance
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
@@ -22,10 +22,7 @@ const io = new Server(server, {
     },
 });
 
-// Connect to MongoDB
 connectDB();
-
-// Apply middleware
 setupMiddlewares(app);
 
 // Health check route
@@ -46,104 +43,59 @@ app.use((err, req, res, next) => {
     res.status(500).send({ error: "Something went wrong!" });
 });
 
-// Users Map
-const users = new Map();
+const updateUsersList = async () => {
+    const allUsers = await User.find({}, 'firstName lastName email _id socketId');
+    io.to("Mobzway_Chat Room").emit("allUsers", allUsers);
+};
 
-// Validation function
-function validateUserData(userDetails) {
-    const requiredFields = [
-        "email", 
-        "firstName", 
-        "lastName", 
-        "_id", 
-        "mobile", 
-        "address", 
-        "loginId", 
-        "password", 
-        "updatedAt", 
-        "createdAt"
-    ];
-    const errors = [];
+const setInactivityTimeout = (socket) => {
+    return setTimeout(async () => {
+        console.log(`User ${socket.id} is offline due to inactivity`);
+        await User.updateOne({ socketId: socket.id }, { $set: { socketId: null } });
+        await updateUsersList();
+    }, 120000); // 2 minutes timeout
+};
 
-    requiredFields.forEach((field) => {
-        if (!userDetails[field]) {
-            errors.push(`${field} is required`);
-        }
+// Handle Socket Connection
+io.on('connection', async (socket) => {
+    console.log(`User Connected: ${socket.id}`);
+
+    socket.join("Mobzway_Chat Room");
+    console.log(`${socket.id} joined "Mobzway_Chat Room"`);
+
+    const user = await User.findOneAndUpdate(
+        { socketId: null },
+        { $set: { socketId: socket.id } },
+        { new: true }
+    );
+
+    socket.emit('connected', {
+        socketId: socket.id,
+        room: "Mobzway_Chat Room"
     });
 
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (userDetails.email && !emailPattern.test(userDetails.email)) {
-        errors.push("Invalid email format");
-    }
+    await updateUsersList();
 
-    const mobilePattern = /^[0-9]{10}$/;
-    if (userDetails.mobile && !mobilePattern.test(userDetails.mobile)) {
-        errors.push("Invalid mobile number: Must be 10 digits");
-    }
+    let inactivityTimeout = setInactivityTimeout(socket);
 
-    return errors;
-}
+    socket.on('user-message', async (message) => {
+        console.log("Message received:", message);
+        
+        clearTimeout(inactivityTimeout);
 
-// WebSocket connection
-io.on("connection", (socket) => {
-    console.log(`New user connected: ${socket.id}`);
-
-    // Handle user joining
-    socket.on("joinRoom", (userDetails) => {
-        console.log("Received user data:", userDetails);
-
-        // Validate user data
-        const validationErrors = validateUserData(userDetails);
-        if (validationErrors.length > 0) {
-            console.error("Validation errors:", validationErrors);
-            io.to(socket.id).emit("validationError", { errors: validationErrors });
-            return;
-        }
-
-        const user = {
-            socketId: socket.id,
-            email: userDetails.email,
-            firstName: userDetails.firstName,
-            lastName: userDetails.lastName,
-            mobile: userDetails.mobile,
-            address: userDetails.address,
-            _id: userDetails._id,
-            loginId: userDetails.loginId,
-            password: userDetails.password,
-            updatedAt: userDetails.updatedAt,
-            createdAt: userDetails.createdAt,
-        };
-        users.set(socket.id, user);
-
-        const roomName = "joinRoom";
-        socket.join(roomName);
-
-        io.to(roomName).emit("userJoined", {
-            message: `${userDetails.firstName} ${userDetails.lastName} joined the room!`,
-        });
-
-        io.emit("updateUserList", Array.from(users.values()));
+        io.to("Mobzway_Chat Room").emit("message", message);
+        inactivityTimeout = setInactivityTimeout(socket);
     });
 
-    // Handle user disconnect
-    socket.on("disconnect", () => {
-        users.delete(socket.id);
-        io.to("joinRoom").emit("userDisconnected", socket.id);
-        io.emit("updateUserList", Array.from(users.values()));
-    });
+    socket.on("disconnect", async () => {
+        console.log(`User Disconnected: ${socket.id}`);
 
-    // Handle request for users list
-    socket.on("getUsers", () => {
-        io.to(socket.id).emit("updateUserList", Array.from(users.values()));
-    });
-
-    // Handle WebSocket errors
-    socket.on("error", (err) => {
-        console.error("Socket.IO error:", err);
+        await User.updateOne({ socketId: socket.id }, { $set: { socketId: null } });
+        await updateUsersList();
     });
 });
 
-// Start the server
+// Start server
 server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
@@ -157,6 +109,3 @@ process.on("SIGINT", async () => {
         process.exit(0);
     });
 });
-
-// Export users and io for external usage
-export { users, io };
