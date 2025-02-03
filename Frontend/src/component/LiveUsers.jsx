@@ -87,7 +87,7 @@ const LiveUsers = () => {
     useEffect(() => {
         const timeout = setTimeout(() => {
             setUsers([]);
-        }, 1 * 60 * 1000); // 2 minutes
+        }, 120000); // 2 minutes
 
         return () => clearTimeout(timeout);
     }, [users]);
