@@ -44,7 +44,6 @@ const LiveUsers = () => {
             setIsLoading(false);
         });
 
-
         socketRef.current.on('userJoined', (newUser) => {
             console.log("New User Joined:", newUser);
             setUsers(prevUsers => [
@@ -56,14 +55,13 @@ const LiveUsers = () => {
 
         socketRef.current.on('userDisconnected', (socketId) => {
             console.log(`User Disconnected, Socket ID: ${socketId}`);
-        
             setUsers(prevUsers => {
                 return prevUsers.map(user =>
                     user.socketId === socketId ? { ...user, socketId: "Offline" } : user
                 );
             });
         });
-        
+
         socketRef.current.on('connect_error', () => {
             setError('Failed to connect to server');
         });
@@ -77,7 +75,6 @@ const LiveUsers = () => {
         };
     }, []);
 
-    // Automatically hide the user joined message after 10 seconds
     useEffect(() => {
         if (userJoinedMessage) {
             const timer = setTimeout(() => {
@@ -87,13 +84,21 @@ const LiveUsers = () => {
         }
     }, [userJoinedMessage]);
 
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            setUsers([]);
+        }, 1 * 60 * 1000); // 2 minutes
+
+        return () => clearTimeout(timeout);
+    }, [users]);
+
     const fetchUserInfo = async (userId) => {
         try {
             setIsLoading(true);
             const response = await fetch(`${socketUrl}/getUserDetails/${userId}`);
             if (!response.ok) throw new Error('User not found');
             const data = await response.json();
-            console.log("Fetched User Info:", data); 
+            console.log("Fetched User Info:", data);
             setUserInfo(data);
             setIsModalOpen(true);
         } catch (err) {
@@ -131,42 +136,42 @@ const LiveUsers = () => {
                 <div className="flex justify-center items-center min-h-[200px]">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
                 </div>
-            ) : (
+            ) : users.length > 0 ? (
                 <div id="usersContainer" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {users.length > 0 ? (
-                        users.map((user) => (
-                            <div
-                                key={user.nanoId}
-                                className={`p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer ${!user.socketId ? "opacity-50 cursor-not-allowed" : ""}`}
-                                onClick={() => fetchUserInfo(user._id)}
-                            >
-                                <div className="mb-4 flex items-center space-x-2">
-                                    <div className={`w-3 h-3 rounded-full ${user.socketId ? "bg-green-500" : "bg-red-400"}`}></div>
-                                    <span className={`${user.socketId ? "text-green-500" : "text-gray-400"} text-sm font-medium`}>
-                                        {user.socketId ? "Online" : "Offline"}
-                                    </span>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-gray-800 font-semibold text-lg">
-                                        {user.firstName || 'Unknown'} {user.lastName || 'User'}
-                                    </h3>
-                                    <p className="text-gray-500">{user.email || 'No Email Provided'}</p>
-                                    <small className="text-gray-400">
-                                        User ID: {user._id || 'Unavailable'}
-                                    </small> <br />
-                                    <small className="text-gray-400">
-                                        Socket ID: {user.socketId || 'Unavailable'}
-                                    </small>
-                                </div>
+                    {users.map((user) => (
+                        <div
+                            key={user.nanoId}
+                            className={`p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer ${!user.socketId ? "opacity-50 cursor-not-allowed" : ""}`}
+                            onClick={() => fetchUserInfo(user._id)}
+                        >
+                            <div className="mb-4 flex items-center space-x-2">
+                                <div className={`w-3 h-3 rounded-full ${user.socketId ? "bg-green-500" : "bg-red-400"}`}></div>
+                                <span className={`${user.socketId ? "text-green-500" : "text-gray-400"} text-sm font-medium`}>
+                                    {user.socketId ? "Online" : "Offline"}
+                                </span>
                             </div>
-                        ))
-                    ) : (
-                        <div className="col-span-full text-center text-gray-500">
-                            <p>No user is live. Please refresh the page to load live users.</p>
-                            <button className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg" onClick={() => window.location.reload()}>Refresh</button>
+
+                            <div>
+                                <h3 className="text-gray-800 font-semibold text-lg">
+                                    {user.firstName || 'Unknown'} {user.lastName || 'User'}
+                                </h3>
+                                <p className="text-gray-500">{user.email || 'No Email Provided'}</p>
+                                <small className="text-gray-400">
+                                    User ID: {user._id || 'Unavailable'}
+                                </small> <br />
+                                <small className="text-gray-400">
+                                    Socket ID: {user.socketId || 'Unavailable'}
+                                </small>
+                            </div>
                         </div>
-                    )}
+                    ))}
+                </div>
+            ) : (
+                <div className="col-span-full text-center text-gray-500">
+                    <p>No user is live. Please refresh the page to load live users.</p>
+                    <button className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg" onClick={() => window.location.reload()}>
+                        Refresh
+                    </button>
                 </div>
             )}
 
