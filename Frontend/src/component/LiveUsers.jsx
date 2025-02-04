@@ -74,7 +74,7 @@ const LiveUsers = () => {
     };
 
     const handleLoginRedirect = () => {
-        navigate('/viewUser');
+        navigate('/login');
     };
 
     return (
