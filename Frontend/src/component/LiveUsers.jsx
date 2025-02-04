@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import Modal from "./Modal";
+import { useNavigate } from 'react-router-dom';
 
 const socketUrl = "https://mobzway-task01.onrender.com";
 
@@ -10,6 +11,7 @@ const LiveUsers = () => {
     const [userInfo, setUserInfo] = useState(null);
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
 
     const userId = localStorage.getItem("userId");
     const socketRef = useRef(null);
@@ -72,7 +74,7 @@ const LiveUsers = () => {
     };
 
     const handleLoginRedirect = () => {
-        window.location.href = "/login";
+        navigate('/viewUser');
     };
 
     return (
