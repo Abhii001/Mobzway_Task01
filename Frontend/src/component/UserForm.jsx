@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-const UserForm = ({ onUserSaved }) => {
+const UserForm = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -15,6 +17,8 @@ const UserForm = ({ onUserSaved }) => {
     loginId: "",
     password: "",
   });
+
+  const [isUserSaved, setIsUserSaved] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,7 +72,10 @@ const UserForm = ({ onUserSaved }) => {
           loginId: "",
           password: "",
         });
-        onUserSaved()
+        setIsUserSaved(true);
+
+        // Redirect to login page after successful registration
+        navigate("/login");
       } else {
         throw new Error(result.error);
       }
@@ -79,6 +86,28 @@ const UserForm = ({ onUserSaved }) => {
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen p-6 bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">
+
+      <button
+        onClick={() => navigate("/")}
+        className="absolute top-6 left-6 p-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-full shadow-lg transform transition-all hover:scale-110 hover:shadow-2xl focus:outline-none"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </button>
+
+
       <motion.div
         className="bg-white shadow-xl rounded-lg p-8 max-w-xl w-full"
         initial={{ opacity: 0, y: -50 }}
@@ -86,7 +115,7 @@ const UserForm = ({ onUserSaved }) => {
         transition={{ duration: 0.5 }}
       >
         <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          User Form
+          User Registration
         </h1>
         <form
           onSubmit={(e) => {
@@ -105,7 +134,7 @@ const UserForm = ({ onUserSaved }) => {
             { name: "state", placeholder: "State", type: "text", textOnly: true },
             { name: "country", placeholder: "Country", type: "text", textOnly: true },
             { name: "loginId", placeholder: "Login ID", type: "text" },
-            { name: "password", placeholder: "Password", type: "password" },
+            { name: "password", placeholder: "Password", type: "password" }
           ].map((field) => (
             <input
               key={field.name}
@@ -114,9 +143,7 @@ const UserForm = ({ onUserSaved }) => {
               placeholder={field.placeholder}
               value={formData[field.name]}
               onChange={field.textOnly ? handleTextOnlyInput : handleChange}
-              required={["firstName", "lastName", "mobile", "email", "loginId", "password"].includes(
-                field.name
-              )}
+              required={["firstName", "lastName", "mobile", "email", "loginId", "password"].includes(field.name)}
               className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           ))}
@@ -125,15 +152,15 @@ const UserForm = ({ onUserSaved }) => {
             type="submit"
             className="w-full bg-gradient-to-r from-green-500 via-green-600 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50"
           >
-            Save
+            Register User
           </button>
 
-          <Link to="/viewUser">
+          <Link to="/login">
             <button
               type="button"
-              className="w-full mt-4 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+              className="w-full mt-4 bg-gradient-to-r from-gray-600 via-gray-700 to-gray-800 hover:from-gray-700 hover:to-gray-900 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
             >
-              View Users
+              Already have an account? Login
             </button>
           </Link>
         </form>
