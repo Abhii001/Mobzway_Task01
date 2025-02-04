@@ -76,7 +76,9 @@ io.on("connection", (socket) => {
             const user = await User.findById(userId);
             if (user) {
                 await User.updateMany({ _id: userId }, { $set: { socketId: null } });
+
                 await User.updateOne({ _id: userId }, { $set: { socketId: socket.id } });
+
                 console.log(`${user.firstName} (${user.email}) is now Online. Socket ID: ${socket.id}`);
                 activeUsers[userId] = Date.now();
                 await updateUsersList();
@@ -100,6 +102,16 @@ io.on("connection", (socket) => {
         }
     });
 });
+
+const resetSocketIds = async () => {
+    try {
+        await User.updateMany({}, { $set: { socketId: null } });
+        console.log("Reset all socket IDs on server startup.");
+    } catch (error) {
+        console.error("Failed to reset socket IDs:", error);
+    }
+};
+resetSocketIds();
 
 // Start server
 server.listen(PORT, () => {
