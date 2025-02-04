@@ -10,7 +10,6 @@ const allowedOrigins = [
 
 const setupMiddlewares = (app) => {
     app.use(bodyParser.json());
-
     app.use(cors({
         origin: (origin, callback) => {
             if (!origin || allowedOrigins.includes(origin)) {
@@ -23,8 +22,8 @@ const setupMiddlewares = (app) => {
         allowedHeaders: ['Content-Type', 'Authorization'],
         credentials: true,
     }));
-
     app.use(helmet());
+    app.options('*', cors());
 };
 
 export default setupMiddlewares;

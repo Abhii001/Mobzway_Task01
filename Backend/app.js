@@ -11,6 +11,7 @@ import User from "./models/userModel.js";
 
 dotenv.config();
 
+// Initialize the app, server, and socket.io
 const app = express();
 const PORT = process.env.PORT || 5100;
 
@@ -43,55 +44,60 @@ app.use((err, req, res, next) => {
     res.status(500).send({ error: "Something went wrong!" });
 });
 
+//socket.io
+const activeUsers = {};
+
 const updateUsersList = async () => {
-    const allUsers = await User.find({}, 'firstName lastName email _id socketId');
-    io.to("Mobzway_Chat Room").emit("allUsers", allUsers);
+    const allUsers = await User.find({ socketId: { $ne: null } }, 'firstName lastName email _id socketId');
+    console.log("Updated Live Users List:", allUsers);
+    io.emit("allUsers", allUsers);
 };
 
-const setInactivityTimeout = (socket) => {
-    return setTimeout(async () => {
-        console.log(`User ${socket.id} is offline due to inactivity`);
-        await User.updateOne({ socketId: socket.id }, { $set: { socketId: null } });
-        await updateUsersList();
-    }, 120000); // 2 minutes timeout
+const checkInactiveUsers = async () => {
+    const now = Date.now();
+    for (let userId in activeUsers) {
+        const lastActive = activeUsers[userId];
+        if (now - lastActive >= 2 * 60 * 1000) {
+            await User.updateOne({ _id: userId }, { $set: { socketId: null } });
+            console.log(`User ${userId} has been inactive for 2 minutes and is now offline.`);
+            delete activeUsers[userId];
+            await updateUsersList();
+        }
+    }
 };
 
-// Handle Socket Connection
-io.on('connection', async (socket) => {
+setInterval(checkInactiveUsers, 2 * 60 * 1000);
+
+io.on("connection", (socket) => {
     console.log(`User Connected: ${socket.id}`);
 
-    socket.join("Mobzway_Chat Room");
-    console.log(`${socket.id} joined "Mobzway_Chat Room"`);
+    socket.on("authenticate", async (userId) => {
+        try {
+            const user = await User.findById(userId);
+            if (user) {
+                await User.updateMany({ _id: userId }, { $set: { socketId: null } });
+                await User.updateOne({ _id: userId }, { $set: { socketId: socket.id } });
+                console.log(`${user.firstName} (${user.email}) is now Online. Socket ID: ${socket.id}`);
+                activeUsers[userId] = Date.now();
+                await updateUsersList();
 
-    const user = await User.findOneAndUpdate(
-        { socketId: null },
-        { $set: { socketId: socket.id } },
-        { new: true }
-    );
+                socket.emit("connected", {
+                    socketId: socket.id,
+                    room: "Mobzway_Chat Room",
+                });
 
-    socket.emit('connected', {
-        socketId: socket.id,
-        room: "Mobzway_Chat Room"
-    });
-
-    await updateUsersList();
-
-    let inactivityTimeout = setInactivityTimeout(socket);
-
-    socket.on('user-message', async (message) => {
-        console.log("Message received:", message);
-        
-        clearTimeout(inactivityTimeout);
-
-        io.to("Mobzway_Chat Room").emit("message", message);
-        inactivityTimeout = setInactivityTimeout(socket);
-    });
-
-    socket.on("disconnect", async () => {
-        console.log(`User Disconnected: ${socket.id}`);
-
-        await User.updateOne({ socketId: socket.id }, { $set: { socketId: null } });
-        await updateUsersList();
+                socket.on("disconnect", async () => {
+                    console.log(`User Disconnected: ${socket.id}`);
+                    await User.updateOne({ socketId: socket.id }, { $set: { socketId: null } });
+                    delete activeUsers[userId];
+                    await updateUsersList();
+                });
+            } else {
+                console.log("Authentication failed: User not found");
+            }
+        } catch (error) {
+            console.error("Error during authentication:", error);
+        }
     });
 });
 
