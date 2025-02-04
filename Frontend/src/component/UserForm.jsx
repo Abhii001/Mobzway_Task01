@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
-const UserForm = () => {
+const UserForm = ({ onUserSaved }) => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -68,6 +68,7 @@ const UserForm = () => {
           loginId: "",
           password: "",
         });
+        onUserSaved()
       } else {
         throw new Error(result.error);
       }
@@ -94,7 +95,7 @@ const UserForm = () => {
           }}
           className="space-y-4"
         >
-          {[ 
+          {[
             { name: "firstName", placeholder: "First Name", type: "text", textOnly: true },
             { name: "lastName", placeholder: "Last Name", type: "text", textOnly: true },
             { name: "mobile", placeholder: "Mobile No", type: "number" },

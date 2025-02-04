@@ -7,12 +7,12 @@ const LiveUsers = () => {
     const [users, setUsers] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userInfo, setUserInfo] = useState(null);
-    const [userJoinedMessage, setUserJoinedMessage] = useState(null);
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
     const socketUrl = 'https://mobzway-task01.onrender.com';
     const socketRef = useRef(null);
+    const intervalRef = useRef(null);
 
     useEffect(() => {
         socketRef.current = io(socketUrl, {
@@ -29,8 +29,6 @@ const LiveUsers = () => {
         });
 
         socketRef.current.on('allUsers', (users) => {
-            console.log("Received Users from Server:", users);
-
             const updatedUsers = users.map(user => ({
                 ...user,
                 nanoId: nanoid(),
@@ -39,27 +37,21 @@ const LiveUsers = () => {
                 address: user.address || 'Not Provided',
             }));
 
-            console.log("Processed Users (Before State Update):", updatedUsers);
             setUsers(updatedUsers);
             setIsLoading(false);
         });
 
         socketRef.current.on('userJoined', (newUser) => {
-            console.log("New User Joined:", newUser);
             setUsers(prevUsers => [
                 ...prevUsers,
                 { ...newUser, nanoId: nanoid() }
             ]);
-            setUserJoinedMessage(`${newUser.firstName} has joined the chat.`);
         });
 
         socketRef.current.on('userDisconnected', (socketId) => {
-            console.log(`User Disconnected, Socket ID: ${socketId}`);
-            setUsers(prevUsers => {
-                return prevUsers.map(user =>
-                    user.socketId === socketId ? { ...user, socketId: "Offline" } : user
-                );
-            });
+            setUsers(prevUsers => prevUsers.map(user =>
+                user.socketId === socketId ? { ...user, socketId: "Offline" } : user
+            ));
         });
 
         socketRef.current.on('connect_error', () => {
@@ -67,29 +59,22 @@ const LiveUsers = () => {
         });
 
         return () => {
-            socketRef.current.off('allUsers');
-            socketRef.current.off('userJoined');
-            socketRef.current.off('userDisconnected');
-            socketRef.current.off('connect_error');
-            socketRef.current.disconnect();
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
         };
     }, []);
 
     useEffect(() => {
-        if (userJoinedMessage) {
-            const timer = setTimeout(() => {
-                setUserJoinedMessage(null);
-            }, 10000);
-            return () => clearTimeout(timer);
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
         }
-    }, [userJoinedMessage]);
 
-    useEffect(() => {
-        const timeout = setTimeout(() => {
-            setUsers([]);
-        }, 120000); // 2 minutes
+        intervalRef.current = setInterval(() => {
+            setUsers(null);
+        }, 120000);
 
-        return () => clearTimeout(timeout);
+        return () => clearInterval(intervalRef.current);
     }, [users]);
 
     const fetchUserInfo = async (userId) => {
@@ -98,7 +83,6 @@ const LiveUsers = () => {
             const response = await fetch(`${socketUrl}/getUserDetails/${userId}`);
             if (!response.ok) throw new Error('User not found');
             const data = await response.json();
-            console.log("Fetched User Info:", data);
             setUserInfo(data);
             setIsModalOpen(true);
         } catch (err) {
@@ -119,12 +103,6 @@ const LiveUsers = () => {
                 Chat Room
             </h1>
 
-            {userJoinedMessage && (
-                <p className="text-center text-green-500 font-bold mt-4">
-                    {userJoinedMessage}
-                </p>
-            )}
-
             {error && (
                 <div className="bg-red-100 text-red-600 p-4 rounded mb-4 flex justify-between items-center">
                     <p>{error}</p>
@@ -135,6 +113,13 @@ const LiveUsers = () => {
             {isLoading ? (
                 <div className="flex justify-center items-center min-h-[200px]">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+                </div>
+            ) : users === null ? (
+                <div className="text-center text-gray-500">
+                    <p>Live users list has expired. Please refresh to load users.</p>
+                    <button className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg" onClick={() => window.location.reload()}>
+                        Refresh
+                    </button>
                 </div>
             ) : users.length > 0 ? (
                 <div id="usersContainer" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
