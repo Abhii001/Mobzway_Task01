@@ -18,7 +18,7 @@ app.use(cors())
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: ["*", "https://chriagtechassigment.netlify.app"],
+        origin: "*",
         methods: ["GET", "POST"],
     },
 });
