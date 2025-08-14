@@ -15,6 +15,8 @@ dotenv.config();
 // Initialize the app, server, and socket.io
 const app = express();
 const PORT = process.env.PORT || 5100;
+app.use(express.json());
+
 
 const allowedOrigins = [
     "*",
