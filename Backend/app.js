@@ -14,11 +14,11 @@ dotenv.config();
 // Initialize the app, server, and socket.io
 const app = express();
 const PORT = process.env.PORT || 5100;
-
+app.use(cors())
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "*",
+        origin: ["*", "https://chriagtechassigment.netlify.app"],
         methods: ["GET", "POST"],
     },
 });
