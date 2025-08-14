@@ -8,7 +8,6 @@ import mongoose from "mongoose";
 import path from "path";
 import dotenv from "dotenv";
 import User from "./models/userModel.js";
-import cors from 'cors';
 
 dotenv.config();
 
@@ -16,26 +15,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5100;
 app.use(express.json());
-
-
-const allowedOrigins = [
-    "http://localhost:5173",
-    "https://chriagtechassigment.netlify.app",
-    "https://nodetask01mobzway.netlify.app"
-];
-
-const corsOptions = {
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error("Not allowed by CORS"));
-        }
-    },
-    credentials: true,
-};
-
-app.use(cors(corsOptions));
 
 const server = http.createServer(app);
 const io = new Server(server, {
