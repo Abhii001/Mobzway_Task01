@@ -17,6 +17,7 @@ const app = express();
 const PORT = process.env.PORT || 5100;
 
 const allowedOrigins = [
+    "*",
   "http://localhost:5173",
   "https://chriagtechassigment.netlify.app"
 ];
@@ -42,7 +43,7 @@ app.options("*", cors({
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "*",
+        origin: allowedOrigins,
         methods: ["GET", "POST"],
     },
 });
