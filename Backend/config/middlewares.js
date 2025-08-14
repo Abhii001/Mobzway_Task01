@@ -5,7 +5,8 @@ import helmet from "helmet";
 const allowedOrigins = [
     'http://localhost:5173',
     'https://nodetask01mobzway.netlify.app',
-    'https://mobzway-task01.onrender.com'
+    'https://mobzway-task01.onrender.com',
+    "https://chriagtechassigment.netlify.app"
 ];
 
 const setupMiddlewares = (app) => {
